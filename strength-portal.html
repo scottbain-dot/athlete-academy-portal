@@ -1967,7 +1967,7 @@
             </header>
 
             <!-- Movement Assessment Card -->
-            <div class="glass-card">
+            <div class="glass-card" id="movementAssessment">
                 <h2 class="section-title">📹 Movement Assessment</h2>
                 <p class="section-subtitle">Track your progress, develop your skills</p>
 
@@ -2558,6 +2558,19 @@
 
             updateSelectedPattern();
         }
+        
+        function scrollToAssessmentAndSelect(patternIndex) {
+            // Scroll to the Movement Assessment section
+            const assessmentSection = document.getElementById('movementAssessment');
+            if (assessmentSection) {
+                assessmentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            // Select the pattern after a short delay to allow scroll
+            setTimeout(() => {
+                selectPattern(patternIndex);
+            }, 300);
+        }
 
         function updateSelectedPattern() {
             const techKey = selectedPattern.name + '_Tech';
@@ -2997,7 +3010,6 @@
                     },
                     {
                         name: 'World\'s Greatest Stretch',
-                        video: 'https://www.youtube.com/embed/u5M8F_JN7Xg',
                         instructions: [
                             '3-5 reps each side',
                             'Lunge, rotate, reach'
@@ -3192,6 +3204,56 @@
                 ]
             });
 
+            // Technique Practice block - show patterns that still need technique work
+            const techniquePracticeExercises = [];
+            patterns.forEach(pattern => {
+                const techLevel = parseInt(strength?.[pattern.name + '_Tech']) || 0;
+                const strTier = parseInt(strength?.[pattern.name + '_Str']) || 0;
+                const hasStrength = strTier > 0;
+                
+                // Only include if not at max level (5) and not in testing state
+                if (techLevel < 5) {
+                    const isReadyToTest = techLevel >= 2 && !hasStrength;
+                    
+                    if (!isReadyToTest) {
+                        // They're working on next level
+                        const nextLevel = techLevel + 1;
+                        const exercise = pattern.exercises[nextLevel];
+                        if (exercise) {
+                            techniquePracticeExercises.push({
+                                patternKey: pattern.key,
+                                patternName: pattern.name,
+                                name: exercise.name,
+                                level: nextLevel,
+                                techLevel: techLevel
+                            });
+                        }
+                    }
+                }
+            });
+
+            if (techniquePracticeExercises.length > 0) {
+                workoutBlocks.push({
+                    type: 'technique',
+                    title: '🎯 TECHNIQUE PRACTICE',
+                    subtitle: 'Work on your next levels',
+                    exercises: techniquePracticeExercises.map(ex => ({
+                        name: `${ex.patternName}: ${ex.name}`,
+                        level: ex.level,
+                        patternKey: ex.patternKey,
+                        instructions: [
+                            `Currently at Level ${ex.techLevel}`,
+                            `Working towards Level ${ex.level}`,
+                            'Film and submit when ready'
+                        ],
+                        sets: 1,
+                        reps: 0,
+                        completed: [false],
+                        linkToAssessment: true
+                    }))
+                });
+            }
+
             // Summary block
             workoutBlocks.push({
                 type: 'summary',
@@ -3286,8 +3348,27 @@
         function renderExerciseInBlock(block, exercise, exIndex) {
             let html = '';
             
+            // Special handling for technique practice links
+            if (exercise.linkToAssessment) {
+                const patternIndex = patterns.findIndex(p => p.key === exercise.patternKey);
+                html += `
+                    <div class="technique-link-card" onclick="scrollToAssessmentAndSelect(${patternIndex})" style="
+                        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.1));
+                        border: 2px solid rgba(59, 130, 246, 0.3);
+                        border-radius: 16px;
+                        padding: 20px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        text-align: center;
+                    " onmouseover="this.style.borderColor='rgba(59, 130, 246, 0.6)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='rgba(59, 130, 246, 0.3)'; this.style.transform='translateY(0)';">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">🎬</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #3b82f6; margin-bottom: 5px;">Level ${exercise.level}</div>
+                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Tap to view exercise & criteria</div>
+                    </div>
+                `;
+            }
             // Video thumbnail (clickable link to YouTube) or instructions
-            if (exercise.video) {
+            else if (exercise.video) {
                 const videoId = exercise.video.split('/embed/')[1];
                 const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
                 html += `
