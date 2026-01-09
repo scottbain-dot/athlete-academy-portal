@@ -2499,11 +2499,21 @@
                 const techKey = pattern.name + '_Tech';
                 const strKey = pattern.name + '_Str';
                 const techLevel = parseInt(strength?.[techKey]) || 0;
-                const strengthScore = parseFloat(strength?.[strKey]) || 0;
+                const strengthTier = parseInt(strength?.[strKey]) || 0;
                 
-                // Determine if this is in "testing" state (Level 2+ passed but no strength score)
-                const hasStrength = strengthScore > 0;
+                // Determine display state
+                const hasStrength = strengthTier > 0;
                 const isReadyToTest = techLevel >= 2 && !hasStrength;
+                
+                // Calculate what level they're WORKING ON (not completed)
+                let workingOnLevel;
+                if (isReadyToTest) {
+                    workingOnLevel = 'TEST';
+                } else if (techLevel >= 5) {
+                    workingOnLevel = 5; // Max level reached
+                } else {
+                    workingOnLevel = techLevel + 1; // Working on next level
+                }
                 
                 const card = document.createElement('div');
                 card.className = `progress-card ${index === 0 ? 'active' : ''}`;
@@ -2513,15 +2523,15 @@
                     // Special TESTING box - amber/gold theme
                     card.style.cssText = 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border-color: rgba(245, 158, 11, 0.5); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);';
                     card.innerHTML = `
-                        <div class="progress-pattern" style="color: #f59e0b;">${pattern.name}</div>
+                        <div class="progress-pattern" style="color: #f59e0b;">${pattern.name.toUpperCase()}</div>
                         <div class="progress-level" style="color: #f59e0b; font-size: 1.5rem;">⚡</div>
                         <div class="progress-label" style="color: #fbbf24; font-weight: 600;">TESTING</div>
                     `;
                 } else {
-                    // Normal tech level display
+                    // Show level they're working ON
                     card.innerHTML = `
-                        <div class="progress-pattern">${pattern.name}</div>
-                        <div class="progress-level">${techLevel}</div>
+                        <div class="progress-pattern">${pattern.name.toUpperCase()}</div>
+                        <div class="progress-level">${workingOnLevel}</div>
                         <div class="progress-label">Tech Level</div>
                     `;
                 }
@@ -2532,16 +2542,21 @@
         function selectPattern(index) {
             selectedPattern = patterns[index];
             const techKey = selectedPattern.name + '_Tech';
-            const techLevel = parseInt(currentStrength?.[techKey]) || 0;
-            // Check if ready to test (Level 2+ passed but no strength score)
             const strKey = selectedPattern.name + '_Str';
-            const hasStrength = parseFloat(currentStrength?.[strKey]) > 0;
+            const techLevel = parseInt(currentStrength?.[techKey]) || 0;
+            const strengthTier = parseInt(currentStrength?.[strKey]) || 0;
+            const hasStrength = strengthTier > 0;
             
+            // Determine what level to show
             if (techLevel >= 2 && !hasStrength) {
-                selectedLevel = 'TEST'; // Ready to test after passing Level 2
+                // Ready to test (passed Level 2, no strength score yet)
+                selectedLevel = 'TEST';
+            } else if (techLevel >= 5) {
+                // Max level reached
+                selectedLevel = 5;
             } else {
-                // Show the NEXT level they're working toward, capped at 5
-                selectedLevel = Math.min(techLevel + 1, 5);
+                // Show the NEXT level they're working toward
+                selectedLevel = techLevel + 1;
             }
 
             // Update active state
@@ -2556,7 +2571,7 @@
             const techKey = selectedPattern.name + '_Tech';
             const strKey = selectedPattern.name + '_Str';
             const completedLevel = parseInt(currentStrength?.[techKey]) || 0;
-            const strengthScore = parseFloat(currentStrength?.[strKey]) || 0;
+            const strengthTier = parseInt(currentStrength?.[strKey]) || 0;
             const gender = currentStrength?.Gender || 'M'; // Default to M if not set
             
             document.getElementById('patternName').textContent = selectedPattern.name;
@@ -2564,7 +2579,7 @@
             
             // Handle TEST (Strength Test) level
             if (selectedLevel === 'TEST') {
-                renderTestLevel(completedLevel, strengthScore, gender);
+                renderTestLevel(completedLevel, strengthTier, gender);
                 return;
             }
             
@@ -2573,17 +2588,18 @@
             
             // Determine if this level is completed, current target, or locked
             const isCompleted = selectedLevel <= completedLevel;
-            const isNext = selectedLevel === completedLevel + 1;
+            const isCurrentTarget = selectedLevel === completedLevel + 1;
             const isLocked = selectedLevel > completedLevel + 1;
             
-            // Build exercise name with badge
+            // Build exercise name with badge - only show CURRENT TARGET, never COMPLETED
+            // (because we're showing what they're working ON, not what they've done)
             let exerciseDisplay = exercise ? exercise.name : '—';
-            if (isCompleted) {
-                exerciseDisplay += ' <span style="background: #22c55e; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">✓ COMPLETED</span>';
-            } else if (isNext) {
+            if (isCurrentTarget) {
                 exerciseDisplay += ' <span style="background: #3b82f6; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">CURRENT TARGET</span>';
             } else if (isLocked) {
                 exerciseDisplay += ' <span style="background: #6b7280; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">🔒 LOCKED</span>';
+            } else if (selectedLevel === 5 && completedLevel >= 5) {
+                exerciseDisplay += ' <span style="background: #22c55e; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">✓ MASTERED</span>';
             }
             document.getElementById('exerciseName').innerHTML = exerciseDisplay;
             
