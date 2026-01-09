@@ -2507,16 +2507,6 @@
                 const hasStrength = strengthTier > 0;
                 const isReadyToTest = techLevel >= 2 && !hasStrength;
                 
-                // Calculate what level they're WORKING ON (not completed)
-                let workingOnLevel;
-                if (isReadyToTest) {
-                    workingOnLevel = 'TEST';
-                } else if (techLevel >= 5) {
-                    workingOnLevel = 5; // Max level reached
-                } else {
-                    workingOnLevel = techLevel + 1; // Working on next level
-                }
-                
                 const card = document.createElement('div');
                 card.className = `progress-card ${index === 0 ? 'active' : ''}`;
                 card.onclick = () => selectPattern(index);
@@ -2530,10 +2520,10 @@
                         <div class="progress-label" style="color: #fbbf24; font-weight: 600;">TESTING</div>
                     `;
                 } else {
-                    // Show level they're working ON
+                    // Show COMPLETED tech level (what's stored in the sheet)
                     card.innerHTML = `
                         <div class="progress-pattern">${pattern.name.toUpperCase()}</div>
-                        <div class="progress-level">${workingOnLevel}</div>
+                        <div class="progress-level">${techLevel}</div>
                         <div class="progress-label">Tech Level</div>
                     `;
                 }
