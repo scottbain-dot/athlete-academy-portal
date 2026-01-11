@@ -2801,9 +2801,9 @@
             }
         }
 
-        async function fetchWorkoutHistory(email, limit = 10) {
+        async function fetchWorkoutHistory(athleteId, limit = 10) {
             try {
-                const url = `${APPS_SCRIPT_URL}?action=getWorkoutHistory&email=${encodeURIComponent(email)}&limit=${limit}`;
+                const url = `${APPS_SCRIPT_URL}?action=getWorkoutHistory&athleteId=${encodeURIComponent(athleteId)}&limit=${limit}`;
                 const response = await fetch(url);
                 const data = await response.json();
                 return data.success ? data.history : [];
@@ -4515,6 +4515,13 @@
             // Reset timer display
             document.getElementById('timerDisplay').textContent = '00:00';
             document.getElementById('sessionTimer').style.display = 'none';
+            
+            // Clear the workout container (removes completion card HTML)
+            document.getElementById('workoutBlockContainer').innerHTML = `
+                <div class="workout-block" id="currentBlock">
+                    <!-- Dynamically filled based on current block -->
+                </div>
+            `;
             
             // Hide completion state, show pre-session state
             document.getElementById('workoutBlockContainer').style.display = 'none';
