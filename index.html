@@ -1052,7 +1052,8 @@
                 
                 console.log('Received data:', data);
                 
-                if (data.success) {
+                // Apps Script returns 'authenticated: true' with athlete data
+                if (data.success || data.authenticated) {
                     athleteDataCache = data;
                     cacheTimestamp = Date.now();
                     return data;
