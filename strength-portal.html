@@ -2824,6 +2824,10 @@
             document.getElementById('portal').classList.add('active');
             document.getElementById('userName').textContent = currentUser.name;
 
+            // Store the numeric Athlete_ID for use in all API calls
+            currentUser.athleteId = data?.athlete?.Athlete_ID || currentUser.email;
+            console.log('loadPortal - athleteId:', currentUser.athleteId);
+
             // Strength is nested inside athlete object, also get gender from athlete
             const strength = data?.athlete?.strength || {};
             const gender = data?.athlete?.Gender || 'M';
@@ -3289,7 +3293,7 @@
                 maxAvailableSession = await fetchCurrentSession();
                 
                 // Get last session to determine next session
-                const lastSession = await fetchLastSession(currentUser.email);
+                const lastSession = await fetchLastSession(currentUser.athleteId);
                 
                 // Determine next session number
                 let nextSessionNumber = 1;
@@ -3315,7 +3319,7 @@
                 document.getElementById('totalReps').textContent = totalReps;
 
                 // Fetch last session of same type to show "Last time" data
-                const lastSameTypeSession = await fetchLastSessionByType(currentUser.email, currentSessionType);
+                const lastSameTypeSession = await fetchLastSessionByType(currentUser.athleteId, currentSessionType);
                 
                 // Build workout blocks based on session type
                 buildWorkoutBlocks(currentStrength, currentSessionType, lastSameTypeSession);
@@ -4348,7 +4352,7 @@
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         action: 'saveWorkout',
-                        email: currentUser.email,
+                        email: currentUser.athleteId,
                         sessionType: currentSessionType,
                         sessionNumber: currentSessionNumber,
                         exercisesCompleted: JSON.stringify(exercisesCompleted),
@@ -4498,7 +4502,7 @@
             document.getElementById('historyModal').classList.add('active');
             document.getElementById('historyList').innerHTML = '<div class="no-history">Loading history...</div>';
             
-            const history = await fetchWorkoutHistory(currentUser.email, 10);
+            const history = await fetchWorkoutHistory(currentUser.athleteId, 10);
             
             if (history.length === 0) {
                 document.getElementById('historyList').innerHTML = '<div class="no-history">No workout history yet. Complete your first session!</div>';
