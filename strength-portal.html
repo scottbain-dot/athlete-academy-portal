@@ -4516,15 +4516,12 @@
             document.getElementById('timerDisplay').textContent = '00:00';
             document.getElementById('sessionTimer').style.display = 'none';
             
-            // Clear the workout container (removes completion card HTML)
-            document.getElementById('workoutBlockContainer').innerHTML = `
-                <div class="workout-block" id="currentBlock">
-                    <!-- Dynamically filled based on current block -->
-                </div>
-            `;
+            // Restore the workout container structure (showSessionCompleteState replaced it)
+            const container = document.getElementById('workoutBlockContainer');
+            container.innerHTML = '<div class="workout-block" id="currentBlock"></div>';
+            container.style.display = 'none';
             
-            // Hide completion state, show pre-session state
-            document.getElementById('workoutBlockContainer').style.display = 'none';
+            // Show pre-session state
             document.getElementById('sessionNotStarted').style.display = 'block';
             document.getElementById('completeSessionBtn').style.display = 'none';
             
