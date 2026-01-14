@@ -3335,9 +3335,18 @@
                 document.getElementById('sessionBadge').textContent = `Session ${currentSessionNumber}${currentSessionType}`;
                 document.getElementById('nextSessionType').textContent = `${currentSessionNumber}${currentSessionType}`;
 
-                // Update stats counter
-                const totalSessions = currentStrength?.Total_Sessions || 0;
-                const totalReps = currentStrength?.Total_Reps || 0;
+                // Load stats from workout history
+                const history = await fetchWorkoutHistory(currentUser.athleteId, 100);
+                const totalSessions = history.length;
+                let totalReps = 0;
+                history.forEach(session => {
+                    try {
+                        const exercises = JSON.parse(session.exercises || '[]');
+                        exercises.forEach(ex => {
+                            totalReps += (ex.sets || 0) * (ex.reps || 1);
+                        });
+                    } catch (e) {}
+                });
                 document.getElementById('totalSessions').textContent = totalSessions;
                 document.getElementById('totalReps').textContent = totalReps;
 
